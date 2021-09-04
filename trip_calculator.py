@@ -161,19 +161,19 @@ class WeekClass():
         with open(os.path.join(CSV_FOLDER_PATH, CSV_NAME), 'r') as csvfile:
             fieldnames = ['Participant name'] + TRIP_NAMES + ["Week Total"]
             reader = csv.DictReader(csvfile, fieldnames=fieldnames)
-            # For every trip
-            for trip_name in TRIP_NAMES:
-                if trip_name not in self.trips:
-                    self.trips[trip_name] = TripClass(trip_name)
-                # For every participant (every row)
-                for i, row in enumerate(reader):
-                    # Skip header
-                    if i == 0:
-                        continue
+            # For every participant (every row)
+            for i, row in enumerate(reader):
+                # Skip header
+                if i == 0:
+                    continue
+                # For every trip
+                for trip_name in TRIP_NAMES:
+                    if trip_name not in self.trips:
+                        self.trips[trip_name] = TripClass(trip_name)
                     # If participant depense balance is not 0, then he was part of the trip
                     balance = float(row[trip_name])
                     if balance != 0:
-                        self.trips[trip_name].add_participant(row['Participant name'])
+                        self.trips[trip_name].add_participant(row['Participant name'])     
         self.calculate()
             
     def collect_trips_info(self):
@@ -268,7 +268,7 @@ class CarpoolCalculatorClass():
             week_files = found_files_
             break
         for week_file in week_files:
-            if week_file.upper().find("SUMMARY") != -1:
+            if week_file.upper().find("DETAILED") == -1:
                 continue
             self.Weeks.append(WeekClass())
             self.Weeks[-1].load_from_csv(FOLDER_TO_USE, week_file)
