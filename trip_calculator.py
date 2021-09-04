@@ -11,6 +11,8 @@ import os
 
 col = Colour()
 
+RESULTS_FOLD_PATH = os.path.join(os.path.dirname(__file__), 'Results')
+
 # -------------------- #
 # Utility classes      #
 # -------------------- #
@@ -51,7 +53,9 @@ class TripClass():
         self.participants = []
         self.balance = Balance()
 
-        print("\nTrip: " + col.blue(trip_name))
+    def gather_participants(self):
+
+        print("\nTrip: " + col.blue(self.trip_name))
         # Gather participants
         while True:
             # Print current ones
@@ -63,18 +67,16 @@ class TripClass():
                     print(col.blue(participant) + ' / ', end='')
                 print()
             # Add more
-            resp = input("Type participant's name (or 'Restart' / 'End / '' empty for none): ")
-            if resp.upper() == 'RESTART':
+            resp = input("Type participant's name (or 'clear' / '' for done): ")
+            if resp.upper() == 'CLEAR':
                 self.participants = []
                 continue
-            elif resp.upper() == "END":
-                print("Done adding participants")
-                break
             elif resp.upper() == "":
                 if self.participants:
                     print(col.blue("Done"))
                 else:
                     print(col.blue("No driving that day"))
+                print("Done adding participants")
                 break
             else:
                 # Find participant
@@ -90,8 +92,16 @@ class TripClass():
                             found = participant_name
                 if found != '':
                     self.participants.append(found)
+                else:
+                    print(col.red("No matching participants"))
+    
+    def add_participant(self, participant_name):
+        if participant_name not in PARTICIPANT_NAMES:
+            raise ValueError()
+        if participant_name not in self.participants:
+            self.participants.append(participant_name)
 
-    def __str__():
+    def __str__(self):
         string = ''
         for participant in self.participants:
             string += participant + '\n'
@@ -116,6 +126,8 @@ class WeekClass():
     def __init__(self):
         self.trips = {}
         self.week_balance = Balance()
+    
+    def init_date_from_user(self):
         # Input date
         while True:
             date = dateparser.parse(input("What is the week date ? : "))
@@ -141,10 +153,35 @@ class WeekClass():
             else:
                 continue
 
+    def load_from_csv(self, CSV_FOLDER_PATH, CSV_NAME):
+        # Read csv
+        self.date = dateparser.parse(CSV_NAME[9:-4])
+        date_formatted = self.date.strftime("%Y-%m-%d")
+        # Open file and save balance for every trip
+        with open(os.path.join(CSV_FOLDER_PATH, CSV_NAME), 'r') as csvfile:
+            fieldnames = ['Participant name'] + TRIP_NAMES + ["Week Total"]
+            reader = csv.DictReader(csvfile, fieldnames=fieldnames)
+            # For every trip
+            for trip_name in TRIP_NAMES:
+                if trip_name not in self.trips:
+                    self.trips[trip_name] = TripClass(trip_name)
+                # For every participant (every row)
+                for i, row in enumerate(reader):
+                    # Skip header
+                    if i == 0:
+                        continue
+                    # If participant depense balance is not 0, then he was part of the trip
+                    balance = float(row[trip_name])
+                    if balance != 0:
+                        self.trips[trip_name].add_participant(row['Participant name'])
+        self.calculate()
+            
     def collect_trips_info(self):
         print(col.blue("\nWEEK " + str(self.date)))
         for trip_name in TRIP_NAMES:
-            self.trips[trip_name] = TripClass(trip_name)
+            if trip_name not in  self.trips:
+                self.trips[trip_name] = TripClass(trip_name)
+            self.trips[trip_name].gather_participants()
 
     def calculate(self):
         self.week_balance = Balance()
@@ -190,6 +227,7 @@ class CarpoolCalculatorClass():
             resp = input("Press " + col.blue('A') + " to add a new week, " + col.blue('D') + " for done, " + col.blue('V') + " for view: ")
             if resp.upper() == 'A':
                 self.Weeks.append(WeekClass())
+                self.Weeks[-1].init_date_from_user()
             elif resp.upper() == 'D':
                 print("Done adding weeks")
                 break
@@ -201,6 +239,43 @@ class CarpoolCalculatorClass():
             else:
                 print(col.yellow("Invalid answer"))
                 continue
+
+    def load_weeks(self):
+        # Select folder to use
+        print('Found the folowing weeks:')
+        for root, found_dirs_, found_files_ in os.walk(RESULTS_FOLD_PATH):
+            found_dirs = found_dirs_
+            break
+        for i, carpool in enumerate(found_dirs):
+            print(str(i+1) + ') ' + carpool)
+        while True:
+            resp = input("Select the carpool to load: ")
+            if resp.isnumeric() is False:
+                print("Invalid response")
+                continue
+            else:
+                choice = int(resp)
+                if choice > len(found_dirs):
+                    print("Invalid response")
+                    continue
+                else:
+                    print(col.blue("Selected"))
+                    folder_to_use = found_dirs[choice-1]
+                    break
+        # Load the results from it
+        FOLDER_TO_USE = os.path.join(RESULTS_FOLD_PATH, folder_to_use)
+        for root, found_dirs_, found_files_ in os.walk(FOLDER_TO_USE):
+            week_files = found_files_
+            break
+        for week_file in week_files:
+            if week_file.upper().find("SUMMARY") != -1:
+                continue
+            self.Weeks.append(WeekClass())
+            self.Weeks[-1].load_from_csv(FOLDER_TO_USE, week_file)
+        # Print summary
+        print(col.green("Finished loading carpool:"))
+        self.calculate()
+        self.print_summary()
 
     def collect_trip_info(self):
         for week in self.Weeks:
@@ -250,10 +325,9 @@ class CarpoolCalculatorClass():
                 oldest_date = oldest_date.strftime("%Y-%m-%d")
                 RESULT_NAME = 'SUMMARY_' + str(earliest_date) + '_TO_' + str(oldest_date)
                 # Create a folder for it
-                GLOB_RESULTS_FOLD_PATH = os.path.join(os.path.dirname(__file__), 'Results')
-                if not os.path.exists(GLOB_RESULTS_FOLD_PATH):
-                    os.makedirs(GLOB_RESULTS_FOLD_PATH)
-                NEW_RESULT_FOLD_PATH = os.path.join(GLOB_RESULTS_FOLD_PATH, RESULT_NAME)
+                if not os.path.exists(RESULTS_FOLD_PATH):
+                    os.makedirs(RESULTS_FOLD_PATH)
+                NEW_RESULT_FOLD_PATH = os.path.join(RESULTS_FOLD_PATH, RESULT_NAME)
                 if not os.path.exists(NEW_RESULT_FOLD_PATH):
                     os.makedirs(NEW_RESULT_FOLD_PATH)
                 # Save summary
@@ -281,8 +355,24 @@ if __name__ == "__main__":
     print(col.blue("WELCOME TO THE CAR POOL CALCULATOR!"))
     print(col.blue("-----------------------------------\n"))
 
-    # Add weeks until specified finished
-    carpool_calc.add_weeks()
+    # User selection
+    while True:
+        resp = input("What do you want to do? 1) Make a new carpool 2) Load an existing one: ")
+        # Add a new carpool
+        if resp == '1':
+            print(col.blue("Making a new carpool"))
+            carpool_calc.add_weeks()
+            break
+        # Load an existing one
+        elif resp == '2':
+            print(col.blue("Making a new carpool"))
+            carpool_calc.load_weeks()
+            print(col.blue("Ready to modify it"))
+            break
+        else:
+            print(col.red("Invalid response"))
+            continue
+    
 
     # Collect info about each week
     print(col.blue("\n--- Collecting trip info for each week ---\n"))
