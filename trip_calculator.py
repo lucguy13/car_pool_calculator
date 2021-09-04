@@ -3,6 +3,7 @@ from colorama_wrapper import Colour
 import dateparser
 from copy import deepcopy
 import csv
+import os
 
 # -------------------- #
 # Globals              #
@@ -70,7 +71,10 @@ class TripClass():
                 print("Done adding participants")
                 break
             elif resp.upper() == "":
-                print("No driving that day")
+                if self.participants:
+                    print(col.blue("Done"))
+                else:
+                    print(col.blue("No driving that day"))
                 break
             else:
                 # Find participant
@@ -153,12 +157,13 @@ class WeekClass():
         print(col.blue("Week {} balance:".format(self.date)))
         print(self.week_balance)
 
-    def save_detailed(self):
+    def save_detailed(self, OUTPUT_FOLDER_PATH):
         # Create file name from week date
         date_formatted = self.date.strftime("%Y-%m-%d")
         csv_name = 'DETAILED_' + date_formatted + '.csv'
+        CSV_PATH = os.path.join(OUTPUT_FOLDER_PATH, csv_name)
         # Open file and save balance for every trip
-        with open(csv_name, 'w') as csvfile:
+        with open(CSV_PATH, 'w') as csvfile:
             fieldnames = ['Participant name'] + TRIP_NAMES + ["Week Total"]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
@@ -205,7 +210,7 @@ class CarpoolCalculatorClass():
         print(col.blue("\n--- Week summary ---\n"))
         for week in self.Weeks:
             week.print_summary()
-        print(col.blue("\nTOTAL SUMMARY:"))
+        print(col.blue("\n--- Total Summary ---\n"))
         print(self.total_balance)
 
     def calculate(self):
@@ -214,19 +219,10 @@ class CarpoolCalculatorClass():
             week_balance = week.calculate()
             self.total_balance = self.total_balance + week_balance
 
-    def _save(self):
-        # Fetch oldest and newest date
-        earliest_date = oldest_date = self.Weeks[0].date
-        for week in self.Weeks:
-            if week.date > oldest_date:
-                oldest_date = week.date
-            if week.date < earliest_date:
-                earliest_date = week.date
-        earliest_date = earliest_date.strftime("%Y-%m-%d")
-        oldest_date = oldest_date.strftime("%Y-%m-%d")
-        csv_name = 'SUMMARY_' + str(earliest_date) + '_TO_' + str(oldest_date) + '.csv'
+    def _save(self, folder_path, file_name):
+        CSV_PATH = os.path.join(folder_path, file_name + '.csv')
         # Open file and save total summary
-        with open(csv_name, 'w') as csvfile:
+        with open(CSV_PATH, 'w') as csvfile:
             fieldnames = ['Participant name'] + ["Total"]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
@@ -243,11 +239,28 @@ class CarpoolCalculatorClass():
             resp = input("Save the results ? (Y/N): ")
             if resp.upper() == 'Y':
                 print(col.blue("Saving"))
+                # Create result name from oldest and newest dates
+                earliest_date = oldest_date = self.Weeks[0].date
+                for week in self.Weeks:
+                    if week.date > oldest_date:
+                        oldest_date = week.date
+                    if week.date < earliest_date:
+                        earliest_date = week.date
+                earliest_date = earliest_date.strftime("%Y-%m-%d")
+                oldest_date = oldest_date.strftime("%Y-%m-%d")
+                RESULT_NAME = 'SUMMARY_' + str(earliest_date) + '_TO_' + str(oldest_date)
+                # Create a folder for it
+                GLOB_RESULTS_FOLD_PATH = os.path.join(os.path.dirname(__file__), 'Results')
+                if not os.path.exists(GLOB_RESULTS_FOLD_PATH):
+                    os.makedirs(GLOB_RESULTS_FOLD_PATH)
+                NEW_RESULT_FOLD_PATH = os.path.join(GLOB_RESULTS_FOLD_PATH, RESULT_NAME)
+                if not os.path.exists(NEW_RESULT_FOLD_PATH):
+                    os.makedirs(NEW_RESULT_FOLD_PATH)
                 # Save summary
-                self._save()
+                self._save(NEW_RESULT_FOLD_PATH, RESULT_NAME)
                 # Save every week summary
                 for week in self.Weeks:
-                    week.save_detailed()
+                    week.save_detailed(NEW_RESULT_FOLD_PATH)
                 break
             elif resp.upper() == 'N':
                 print(col.warning("Not saving"))
