@@ -42,8 +42,8 @@ class Balance():
     def __str__(self):
         string = ''
         for name in PARTICIPANT_NAMES:
-            string += (name + ": {}\n".format(self.balance[name]))
-        return string
+            string += (name + ": {:.2f}\n".format(self.balance[name]))
+        return string 
 
 class TripClass():
     price = TOTAL_PRICE_PER_TRIP
@@ -147,6 +147,9 @@ class WeekClass():
         # Input date
         while True:
             date = dateparser.parse(input("What is the week date ? : "))
+            if not date:
+                print(col.red("Invalid date, try again"))
+                continue
             date = date.strftime("%Y-%m-%d")
             print("Date parsed as: {}".format(date))
             # Validate
