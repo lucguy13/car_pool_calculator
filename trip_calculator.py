@@ -1,4 +1,4 @@
-from settings import TOTAL_PRICE_PER_TRIP, TRIP_NAMES, PARTICIPANT_NAMES
+from settings import TOTAL_PRICE_PER_TRIP, TRIP_NAMES, PARTICIPANT_NAMES, PASSENGERS_PRESETS
 from colorama_wrapper import Colour
 import dateparser
 from copy import deepcopy
@@ -67,7 +67,7 @@ class TripClass():
                     print(col.blue(participant) + ' / ', end='')
                 print()
             # Add more
-            resp = input("Type participant's name (or 'clear' / '' for done): ")
+            resp = input("--- Add participants ---\n. Selection: participant name / preset number / 'clear' to empty list / '' for done: ")
             if resp.upper() == 'CLEAR':
                 self.participants = []
                 continue
@@ -78,6 +78,20 @@ class TripClass():
                     print(col.blue("No driving that day"))
                 print("Done adding participants")
                 break
+            elif resp.isnumeric():
+                # Apply preset
+                if int(resp) > len(PASSENGERS_PRESETS):
+                    print(col.red("Invalid preset"))
+                    continue
+                else:
+                    for preset_participant in PASSENGERS_PRESETS[int(resp)]:
+                        if preset_participant not in PARTICIPANT_NAMES:
+                            print(col.yellow("Participant {} in preset is invalid, skipping it".format(preset_participant)))
+                        else:
+                            if preset_participant not in self.participants:
+                                self.participants.append(preset_participant)
+                    print(col.blue("Preset loaded"))
+                    continue
             else:
                 # Find participant
                 found = ''
@@ -89,7 +103,9 @@ class TripClass():
                             found = ''
                             break
                         else:
-                            found = participant_name
+                            # Only add if not already in the list
+                            if participant_name not in self.participants:
+                                found = participant_name
                 if found != '':
                     self.participants.append(found)
                 else:

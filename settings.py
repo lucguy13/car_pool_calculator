@@ -19,8 +19,16 @@ TOLL_PRICE_PER_TRIP = 6.5 # $
 TOTAL_PRICE_PER_TRIP = (PRICE_PER_KM * TRIP_DISTANCE) + TOLL_PRICE_PER_TRIP
 
 # Trips
-TRIP_NAMES = [  "Monday morning", "Monday arvo", \
+TRIP_NAMES = (  "Monday morning", "Monday arvo", \
                 "Tuesday morning", "Tuesday arvo", \
                 "Wednesday morning", "Wednesday arvo", \
                 "Thursday morning", "Thursday arvo", \
-                "Friday morning", "Friday arvo"]
+                "Friday morning", "Friday arvo")
+
+# Presets (to save time)
+PASSENGERS_PRESETS = (
+    ("dummy",), # 0
+    ("Victor", "Mariona", "Maya"),  # 1
+    ("Victor", "Mariona"),          # 2
+    ("Victor", "Maya"),             # 3
+)
