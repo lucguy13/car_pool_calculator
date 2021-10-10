@@ -131,6 +131,7 @@ class WeekClass():
         # Input date
         while True:
             date = dateparser.parse(input("What is the week date ? : "))
+            date = date.strftime("%Y-%m-%d")
             print("Date parsed as: {}".format(date))
             # Validate
             while True:
@@ -196,7 +197,7 @@ class WeekClass():
 
     def save_detailed(self, OUTPUT_FOLDER_PATH):
         # Create file name from week date
-        date_formatted = self.date.strftime("%Y-%m-%d")
+        date_formatted = self.date
         csv_name = 'DETAILED_' + date_formatted + '.csv'
         CSV_PATH = os.path.join(OUTPUT_FOLDER_PATH, csv_name)
         # Open file and save balance for every trip
@@ -221,24 +222,44 @@ class CarpoolCalculatorClass():
     Weeks = []
     total_balance = Balance()
     
-    def add_weeks(self):
-        print(col.blue("--- Selecting weeks of carpool ---\n"))
+    def add_edit_weeks(self):
+        # User selection add carpool weeks
         while True:
-            resp = input("Press " + col.blue('A') + " to add a new week, " + col.blue('D') + " for done, " + col.blue('V') + " for view: ")
-            if resp.upper() == 'A':
-                self.Weeks.append(WeekClass())
-                self.Weeks[-1].init_date_from_user()
-            elif resp.upper() == 'D':
-                print("Done adding weeks")
-                break
-            elif resp.upper() == 'V':
-                if not self.Weeks:
-                    print("No week added")
-                for week in self.Weeks:
-                    print(week)
-            else:
-                print(col.yellow("Invalid answer"))
+            # If carpool is empty add a new week directly
+            if not self.Weeks:
+                print("Carpool is empty\n")
+                self.add_week()
+            # Show the current weeks in selected carpool
+            print(col.blue("\n---- Selected carpool menu: ----"))
+            self.print_current_weeks()
+            print("A) Add a new week")
+            print("D) Done")
+            # Selection
+            resp = input("What do you want to do?: ")
+            if resp.isnumeric():
+                if (int(resp) > len(self.Weeks)) or (int(resp) < 1):
+                    print(col.red("Invalid response"))
+                    continue
+                else:
+                    print(col.blue("Editing week"))
+                    self.Weeks[int(resp)-1].collect_trips_info()
+                    continue
+            elif resp.upper() == 'A':
+                print(col.blue("Adding a new week\n"))
+                self.add_week()
                 continue
+            elif resp.upper() == 'D':
+                print("Done")
+                break
+            else:
+                print(col.red("Invalid response"))
+                continue
+
+    def add_week(self):
+        print(col.blue("---- Adding a new week to the carpool ----"))
+        self.Weeks.append(WeekClass())
+        self.Weeks[-1].init_date_from_user()
+        self.Weeks[-1].collect_trips_info()
 
     def load_weeks(self):
         # Select folder to use
@@ -288,6 +309,10 @@ class CarpoolCalculatorClass():
         print(col.blue("\n--- Total Summary ---\n"))
         print(self.total_balance)
 
+    def print_current_weeks(self):
+        for i, week in enumerate(self.Weeks):
+            print("{}) {}".format(i+1, week))
+
     def calculate(self):
         self.total_balance = Balance()
         for week in self.Weeks:
@@ -321,8 +346,6 @@ class CarpoolCalculatorClass():
                         oldest_date = week.date
                     if week.date < earliest_date:
                         earliest_date = week.date
-                earliest_date = earliest_date.strftime("%Y-%m-%d")
-                oldest_date = oldest_date.strftime("%Y-%m-%d")
                 RESULT_NAME = 'SUMMARY_' + str(earliest_date) + '_TO_' + str(oldest_date)
                 # Create a folder for it
                 if not os.path.exists(RESULTS_FOLD_PATH):
@@ -337,7 +360,7 @@ class CarpoolCalculatorClass():
                     week.save_detailed(NEW_RESULT_FOLD_PATH)
                 break
             elif resp.upper() == 'N':
-                print(col.warning("Not saving"))
+                print(col.yellow("Not saving"))
                 break
             else:
                 print(col.red("Invalid reponse"))
@@ -355,13 +378,12 @@ if __name__ == "__main__":
     print(col.blue("WELCOME TO THE CAR POOL CALCULATOR!"))
     print(col.blue("-----------------------------------\n"))
 
-    # User selection
+    # User selection Load or start a new carpool
     while True:
         resp = input("What do you want to do? 1) Make a new carpool 2) Load an existing one: ")
         # Add a new carpool
         if resp == '1':
-            print(col.blue("Making a new carpool"))
-            carpool_calc.add_weeks()
+            print(col.blue("Making a new carpool\n"))
             break
         # Load an existing one
         elif resp == '2':
@@ -372,11 +394,9 @@ if __name__ == "__main__":
         else:
             print(col.red("Invalid response"))
             continue
-    
 
-    # Collect info about each week
-    print(col.blue("\n--- Collecting trip info for each week ---\n"))
-    carpool_calc.collect_trip_info()
+    # Edit carpool weeks
+    carpool_calc.add_edit_weeks()
 
     # Calculate and print summary
     carpool_calc.calculate()

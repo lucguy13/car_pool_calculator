@@ -5,8 +5,8 @@
 # Settable settings
 PARTICIPANT_NAMES = ["Neerav", "Brock", "Victor", "Mariona", "Maya"]
 TRIP_DISTANCE = 15 # Km
-PETROL_PRICE = 1.7 # $/L
-CAR_CONSUMPTION = 8.5 # L/100km
+PETROL_PRICE = 1.75 # $/L
+CAR_CONSUMPTION = 8.2 # L/100km
 
 # Derived trip price
 CAR_CONSUMPTION_PER_KM = CAR_CONSUMPTION / 100
