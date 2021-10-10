@@ -109,7 +109,7 @@ class TripClass():
                 if found != '':
                     self.participants.append(found)
                 else:
-                    print(col.red("No matching participants"))
+                    print(col.red("No participant to add"))
     
     def add_participant(self, participant_name):
         if participant_name not in PARTICIPANT_NAMES:
@@ -176,7 +176,7 @@ class WeekClass():
         date_formatted = self.date.strftime("%Y-%m-%d")
         # Open file and save balance for every trip
         with open(os.path.join(CSV_FOLDER_PATH, CSV_NAME), 'r') as csvfile:
-            fieldnames = ['Participant name'] + TRIP_NAMES + ["Week Total"]
+            fieldnames = ('Participant name',) + TRIP_NAMES + ("Week Total",)
             reader = csv.DictReader(csvfile, fieldnames=fieldnames)
             # For every participant (every row)
             for i, row in enumerate(reader):
@@ -218,7 +218,7 @@ class WeekClass():
         CSV_PATH = os.path.join(OUTPUT_FOLDER_PATH, csv_name)
         # Open file and save balance for every trip
         with open(CSV_PATH, 'w') as csvfile:
-            fieldnames = ['Participant name'] + TRIP_NAMES + ["Week Total"]
+            fieldnames = ('Participant name',) + TRIP_NAMES + ("Week Total",)
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
             for participant_name in PARTICIPANT_NAMES:
