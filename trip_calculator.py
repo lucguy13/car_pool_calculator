@@ -176,7 +176,7 @@ class WeekClass():
     def load_from_csv(self, CSV_FOLDER_PATH, CSV_NAME):
         # Read csv
         self.date = dateparser.parse(CSV_NAME[9:-4])
-        date_formatted = self.date.strftime("%Y-%m-%d")
+        self.date = self.date.strftime("%Y-%m-%d")
         # Open file and save balance for every trip
         with open(os.path.join(CSV_FOLDER_PATH, CSV_NAME), 'r') as csvfile:
             fieldnames = ('Participant name',) + TRIP_NAMES + ("Week Total",)

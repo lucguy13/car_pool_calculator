@@ -28,7 +28,7 @@ TRIP_NAMES = (  "Monday morning", "Monday arvo", \
 # Presets (to save time)
 PASSENGERS_PRESETS = (
     ("dummy",), # 0
-    ("Victor", "Mariona", "Maya"),  # 1
-    ("Victor", "Mariona"),          # 2
-    ("Victor", "Maya"),             # 3
+    ("Victor", "Mariona", "Neerav", "Brock"),  # 1
+    ("Victor", "Mariona", "Neerav"),          # 2
+    ("Victor", "Mariona"),             # 3
 )
