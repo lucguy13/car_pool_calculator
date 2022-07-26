@@ -56,6 +56,7 @@ class TripClass():
     def gather_participants(self):
 
         print("\nTrip: " + col.blue(self.trip_name))
+        print("Selection: participant name / preset number / 'clear' to empty list / '' for done\n--- Add participants ---: ")
         # Gather participants
         while True:
             # Print current ones
@@ -67,16 +68,15 @@ class TripClass():
                     print(col.blue(participant) + ' / ', end='')
                 print()
             # Add more
-            resp = input("--- Add participants ---\n. Selection: participant name / preset number / 'clear' to empty list / '' for done: ")
+            resp = input("")
             if resp.upper() == 'CLEAR':
                 self.participants = []
                 continue
             elif resp.upper() == "":
                 if self.participants:
-                    print(col.blue("Done"))
+                    print(col.green("Done"))
                 else:
                     print(col.blue("No driving that day"))
-                print("Done adding participants")
                 break
             elif resp.isnumeric():
                 # Apply preset
